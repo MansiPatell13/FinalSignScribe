@@ -4,6 +4,8 @@ import { Link } from 'react-router-dom';
 import AuthForm from '@/components/AuthForm';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Info } from 'lucide-react';
 
 const LoginPage: React.FC = () => {
   return (
@@ -30,14 +32,12 @@ const LoginPage: React.FC = () => {
             </div>
           </div>
           
-          <div className="mt-8 text-center text-sm text-muted-foreground">
-            <p>
-              Demo Account: <span className="font-medium">demo@example.com</span>
-            </p>
-            <p>
-              Password: <span className="font-medium">password</span>
-            </p>
-          </div>
+          <Alert variant="default" className="mt-6">
+            <Info className="h-4 w-4" />
+            <AlertDescription className="text-xs">
+              For testing, after creating an account, you may need to check your email to verify your account before logging in.
+            </AlertDescription>
+          </Alert>
         </div>
       </div>
       

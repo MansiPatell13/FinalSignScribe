@@ -4,6 +4,8 @@ import { Link } from 'react-router-dom';
 import AuthForm from '@/components/AuthForm';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Info } from 'lucide-react';
 
 const SignupPage: React.FC = () => {
   return (
@@ -29,6 +31,13 @@ const SignupPage: React.FC = () => {
               </Link>
             </div>
           </div>
+          
+          <Alert variant="default" className="mt-6">
+            <Info className="h-4 w-4" />
+            <AlertDescription className="text-xs">
+              After signing up, you'll receive a verification email. Please check your inbox to activate your account.
+            </AlertDescription>
+          </Alert>
         </div>
       </div>
       

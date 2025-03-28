@@ -1,86 +1,87 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { toast } from 'sonner';
-
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  token: string;
-}
+import { supabase } from '@/integrations/supabase/client';
+import { Session, User } from '@supabase/supabase-js';
 
 interface AuthContextType {
   user: User | null;
+  session: Session | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
   signup: (name: string, email: string, password: string) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check if user is already logged in
-    const storedUser = localStorage.getItem('signscribe-user');
-    if (storedUser) {
-      try {
-        const parsedUser = JSON.parse(storedUser);
-        setUser(parsedUser);
-      } catch (error) {
-        console.error('Failed to parse stored user:', error);
-        localStorage.removeItem('signscribe-user');
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setSession(session);
+        setUser(session?.user ?? null);
+        
+        if (event === 'SIGNED_IN') {
+          toast.success('Signed in successfully');
+        } else if (event === 'SIGNED_OUT') {
+          toast.info('Signed out successfully');
+        }
       }
-    }
-    setIsLoading(false);
+    );
+
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      setIsLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   const login = async (email: string, password: string) => {
     try {
       setIsLoading(true);
-      
-      // For demo purposes, we'll simulate the API call
-      // In production, this would be a real API call to your Flask backend
-      /*
-      const response = await fetch('https://your-api-url/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
       });
       
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Login failed');
+      if (error) {
+        throw error;
       }
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to sign in');
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const signInWithGoogle = async () => {
+    try {
+      setIsLoading(true);
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: window.location.origin + '/login',
+        },
+      });
       
-      const userData = await response.json();
-      */
-      
-      // Simulated response for demo
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API delay
-      
-      // Demo login (replace with actual API integration)
-      if (email === 'demo@example.com' && password === 'password') {
-        const userData = {
-          id: '1',
-          name: 'Demo User',
-          email: 'demo@example.com',
-          token: 'simulated-jwt-token',
-        };
-        
-        setUser(userData);
-        localStorage.setItem('signscribe-user', JSON.stringify(userData));
-        toast.success('Logged in successfully');
-      } else {
-        throw new Error('Invalid credentials');
+      if (error) {
+        throw error;
       }
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Login failed. Please try again.';
-      toast.error(message);
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to sign in with Google');
       throw error;
     } finally {
       setIsLoading(false);
@@ -90,62 +91,78 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const signup = async (name: string, email: string, password: string) => {
     try {
       setIsLoading(true);
-      
-      // For demo purposes, we'll simulate the API call
-      // In production, this would be a real API call to your Flask backend
-      /*
-      const response = await fetch('https://your-api-url/api/auth/signup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password }),
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            name,
+          },
+          emailRedirectTo: `${window.location.origin}/login`,
+        },
       });
       
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Signup failed');
+      if (error) {
+        throw error;
       }
       
-      const userData = await response.json();
-      */
-      
-      // Simulated response for demo
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API delay
-      
-      // Demo signup (replace with actual API integration)
-      const userData = {
-        id: '1',
-        name,
-        email,
-        token: 'simulated-jwt-token',
-      };
-      
-      setUser(userData);
-      localStorage.setItem('signscribe-user', JSON.stringify(userData));
-      toast.success('Signed up successfully');
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Signup failed. Please try again.';
-      toast.error(message);
+      toast.success('Signup successful! Please check your email to confirm your account.');
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to sign up');
       throw error;
     } finally {
       setIsLoading(false);
     }
   };
 
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem('signscribe-user');
-    toast.info('Logged out successfully');
+  const logout = async () => {
+    try {
+      setIsLoading(true);
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        throw error;
+      }
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to sign out');
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const resetPassword = async (email: string) => {
+    try {
+      setIsLoading(true);
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      
+      if (error) {
+        throw error;
+      }
+      
+      toast.success('Password reset email sent. Please check your inbox.');
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to send password reset email');
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
     <AuthContext.Provider 
       value={{ 
-        user, 
+        user,
+        session,
         isAuthenticated: !!user,
         isLoading,
-        login, 
-        signup, 
-        logout 
+        login,
+        signInWithGoogle,
+        signup,
+        logout,
+        resetPassword
       }}
     >
       {children}
