@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
@@ -6,7 +5,7 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Loader2, Mail, Lock, User, Eye, EyeOff, Google } from 'lucide-react';
+import { Loader2, Mail, Lock, User, Eye, EyeOff, Github } from 'lucide-react';
 import {
   Form,
   FormControl,
@@ -231,7 +230,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ type }) => {
               onClick={handleGoogleSignIn}
               disabled={isLoading}
             >
-              <Google className="mr-2 h-4 w-4" />
+              <Github className="mr-2 h-4 w-4" />
               Sign in with Google
             </Button>
           </form>
@@ -357,14 +356,13 @@ const AuthForm: React.FC<AuthFormProps> = ({ type }) => {
               onClick={handleGoogleSignIn}
               disabled={isLoading}
             >
-              <Google className="mr-2 h-4 w-4" />
+              <Github className="mr-2 h-4 w-4" />
               Sign up with Google
             </Button>
           </form>
         </Form>
       )}
       
-      {/* Reset Password Dialog */}
       <Dialog open={resetPasswordOpen} onOpenChange={setResetPasswordOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>

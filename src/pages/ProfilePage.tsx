@@ -32,10 +32,13 @@ const ProfilePage: React.FC = () => {
   const { user, logout } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   
+  // Get user name from user metadata if available
+  const userName = user?.user_metadata?.name || user?.user_metadata?.full_name || '';
+  
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
     defaultValues: {
-      name: user?.name || '',
+      name: userName,
       email: user?.email || '',
     },
   });
@@ -79,7 +82,7 @@ const ProfilePage: React.FC = () => {
                   <div className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center mb-4">
                     <User className="h-12 w-12 text-primary" />
                   </div>
-                  <h3 className="text-xl font-semibold">{user?.name}</h3>
+                  <h3 className="text-xl font-semibold">{userName}</h3>
                   <p className="text-muted-foreground">{user?.email}</p>
                   <Button 
                     variant="outline" 
