@@ -1,16 +1,28 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
-import { Session, User } from '@supabase/supabase-js';
+import { 
+  Auth,
+  User, 
+  UserCredential,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signInWithPopup,
+  GithubAuthProvider,
+  signOut,
+  sendPasswordResetEmail,
+  onAuthStateChanged,
+  sendEmailVerification,
+  updateProfile
+} from 'firebase/auth';
+import { auth } from '@/integrations/firebase/client';
 
 interface AuthContextType {
   user: User | null;
-  session: Session | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  signInWithGoogle: () => Promise<void>;
+  signInWithGithub: () => Promise<void>;
   signup: (name: string, email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
@@ -20,45 +32,29 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        if (event === 'SIGNED_IN') {
-          toast.success('Signed in successfully');
-        } else if (event === 'SIGNED_OUT') {
-          toast.info('Signed out successfully');
-        }
-      }
-    );
-
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setUser(user);
       setIsLoading(false);
+      
+      if (user) {
+        console.log('User is signed in', user);
+      } else {
+        console.log('User is signed out');
+      }
     });
 
-    return () => subscription.unsubscribe();
+    return () => unsubscribe();
   }, []);
 
   const login = async (email: string, password: string) => {
     try {
       setIsLoading(true);
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-      
-      if (error) {
-        throw error;
-      }
+      await signInWithEmailAndPassword(auth, email, password);
+      toast.success('Signed in successfully');
     } catch (error: any) {
       toast.error(error.message || 'Failed to sign in');
       throw error;
@@ -67,21 +63,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  const signInWithGoogle = async () => {
+  const signInWithGithub = async () => {
     try {
       setIsLoading(true);
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: window.location.origin + '/login',
-        },
-      });
-      
-      if (error) {
-        throw error;
-      }
+      const provider = new GithubAuthProvider();
+      await signInWithPopup(auth, provider);
+      toast.success('Signed in with GitHub successfully');
     } catch (error: any) {
-      toast.error(error.message || 'Failed to sign in with Google');
+      toast.error(error.message || 'Failed to sign in with GitHub');
       throw error;
     } finally {
       setIsLoading(false);
@@ -91,19 +80,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const signup = async (name: string, email: string, password: string) => {
     try {
       setIsLoading(true);
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            name,
-          },
-          emailRedirectTo: `${window.location.origin}/login`,
-        },
-      });
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       
-      if (error) {
-        throw error;
+      // Update the user's profile with their name
+      if (userCredential.user) {
+        await updateProfile(userCredential.user, {
+          displayName: name
+        });
+        
+        // Send email verification
+        await sendEmailVerification(userCredential.user);
       }
       
       toast.success('Signup successful! Please check your email to confirm your account.');
@@ -118,11 +104,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const logout = async () => {
     try {
       setIsLoading(true);
-      const { error } = await supabase.auth.signOut();
-      
-      if (error) {
-        throw error;
-      }
+      await signOut(auth);
+      toast.info('Signed out successfully');
     } catch (error: any) {
       toast.error(error.message || 'Failed to sign out');
       throw error;
@@ -134,14 +117,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const resetPassword = async (email: string) => {
     try {
       setIsLoading(true);
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`,
-      });
-      
-      if (error) {
-        throw error;
-      }
-      
+      await sendPasswordResetEmail(auth, email);
       toast.success('Password reset email sent. Please check your inbox.');
     } catch (error: any) {
       toast.error(error.message || 'Failed to send password reset email');
@@ -155,11 +131,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     <AuthContext.Provider 
       value={{ 
         user,
-        session,
         isAuthenticated: !!user,
         isLoading,
         login,
-        signInWithGoogle,
+        signInWithGithub,
         signup,
         logout,
         resetPassword

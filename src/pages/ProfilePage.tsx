@@ -20,6 +20,8 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { updateProfile } from 'firebase/auth';
+import { auth } from '@/integrations/firebase/client';
 
 const profileFormSchema = z.object({
   name: z.string().min(2, { message: 'Name must be at least 2 characters' }),
@@ -32,8 +34,8 @@ const ProfilePage: React.FC = () => {
   const { user, logout } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   
-  // Get user name from user metadata if available
-  const userName = user?.user_metadata?.name || user?.user_metadata?.full_name || '';
+  // Get user name from Firebase user
+  const userName = user?.displayName || '';
   
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
@@ -43,15 +45,30 @@ const ProfilePage: React.FC = () => {
     },
   });
   
-  const onSubmit = (values: ProfileFormValues) => {
-    setIsLoading(true);
-    
-    // Simulate API call
-    setTimeout(() => {
-      console.log('Profile updated:', values);
+  const onSubmit = async (values: ProfileFormValues) => {
+    try {
+      setIsLoading(true);
+      
+      // Update profile in Firebase (only name can be updated this way)
+      if (user && values.name !== user.displayName) {
+        await updateProfile(user, {
+          displayName: values.name
+        });
+      }
+      
+      // Email update requires re-authentication and is more complex
+      // We'll just show a toast for now
+      if (values.email !== user?.email) {
+        toast.info('Email update requires re-authentication. Please contact support.');
+      }
+      
       toast.success('Profile updated successfully');
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to update profile');
+      console.error('Profile update error:', error);
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
   
   return (
@@ -80,9 +97,17 @@ const ProfilePage: React.FC = () => {
                 </CardHeader>
                 <CardContent className="flex flex-col items-center">
                   <div className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-                    <User className="h-12 w-12 text-primary" />
+                    {user?.photoURL ? (
+                      <img 
+                        src={user.photoURL} 
+                        alt={userName || 'User'} 
+                        className="h-24 w-24 rounded-full object-cover"
+                      />
+                    ) : (
+                      <User className="h-12 w-12 text-primary" />
+                    )}
                   </div>
-                  <h3 className="text-xl font-semibold">{userName}</h3>
+                  <h3 className="text-xl font-semibold">{userName || 'User'}</h3>
                   <p className="text-muted-foreground">{user?.email}</p>
                   <Button 
                     variant="outline" 
@@ -125,9 +150,12 @@ const ProfilePage: React.FC = () => {
                           <FormItem>
                             <FormLabel>Email</FormLabel>
                             <FormControl>
-                              <Input placeholder="your.email@example.com" {...field} />
+                              <Input placeholder="your.email@example.com" {...field} disabled />
                             </FormControl>
                             <FormMessage />
+                            <p className="text-xs text-muted-foreground mt-1">
+                              Email changes require additional verification and cannot be done here.
+                            </p>
                           </FormItem>
                         )}
                       />

@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
@@ -57,7 +58,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ type }) => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [resetPasswordOpen, setResetPasswordOpen] = useState(false);
   const navigate = useNavigate();
-  const { login, signup, signInWithGoogle, resetPassword } = useAuth();
+  const { login, signup, signInWithGithub, resetPassword } = useAuth();
   
   const loginForm = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -120,12 +121,13 @@ const AuthForm: React.FC<AuthFormProps> = ({ type }) => {
     }
   };
 
-  const handleGoogleSignIn = async () => {
+  const handleGithubSignIn = async () => {
     try {
       setIsLoading(true);
-      await signInWithGoogle();
+      await signInWithGithub();
+      navigate('/');
     } catch (error) {
-      console.error('Google sign-in error:', error);
+      console.error('GitHub sign-in error:', error);
     } finally {
       setIsLoading(false);
     }
@@ -227,11 +229,11 @@ const AuthForm: React.FC<AuthFormProps> = ({ type }) => {
               type="button" 
               variant="outline" 
               className="w-full"
-              onClick={handleGoogleSignIn}
+              onClick={handleGithubSignIn}
               disabled={isLoading}
             >
               <Github className="mr-2 h-4 w-4" />
-              Sign in with Google
+              Sign in with GitHub
             </Button>
           </form>
         </Form>
@@ -353,11 +355,11 @@ const AuthForm: React.FC<AuthFormProps> = ({ type }) => {
               type="button" 
               variant="outline" 
               className="w-full"
-              onClick={handleGoogleSignIn}
+              onClick={handleGithubSignIn}
               disabled={isLoading}
             >
               <Github className="mr-2 h-4 w-4" />
-              Sign up with Google
+              Sign up with GitHub
             </Button>
           </form>
         </Form>
