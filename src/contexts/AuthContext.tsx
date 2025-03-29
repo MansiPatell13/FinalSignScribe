@@ -76,6 +76,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setIsLoading(false);
     }
   };
+  
 
   const signup = async (name: string, email: string, password: string) => {
     try {
