@@ -64,6 +64,15 @@ const Navbar = () => {
                   Translate
                 </Link>
                 <Link 
+                  to="/learning" 
+                  className={cn(
+                    "text-sm font-medium transition-colors hover:text-primary",
+                    isActive('/learning') ? "text-primary" : "text-muted-foreground"
+                  )}
+                >
+                  Learning
+                </Link>
+                <Link 
                   to="/profile" 
                   className={cn(
                     "text-sm font-medium transition-colors hover:text-primary",
@@ -149,6 +158,16 @@ const Navbar = () => {
                   onClick={closeMenu}
                 >
                   Translate
+                </Link>
+                <Link 
+                  to="/learning" 
+                  className={cn(
+                    "px-2 py-1.5 text-sm font-medium transition-colors hover:text-primary",
+                    isActive('/learning') ? "text-primary" : "text-muted-foreground"
+                  )}
+                  onClick={closeMenu}
+                >
+                  Learning
                 </Link>
                 <Link 
                   to="/profile" 

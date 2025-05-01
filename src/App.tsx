@@ -15,6 +15,7 @@ import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import TranslatePage from "./pages/TranslatePage";
+import LearningPage from "./pages/LearningPage";
 import AboutPage from "./pages/AboutPage";
 import ContactPage from "./pages/ContactPage";
 import ProfilePage from "./pages/ProfilePage";
@@ -43,6 +44,14 @@ const App = () => (
                 element={
                   <ProtectedRoute>
                     <TranslatePage />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/learning" 
+                element={
+                  <ProtectedRoute>
+                    <LearningPage />
                   </ProtectedRoute>
                 } 
               />

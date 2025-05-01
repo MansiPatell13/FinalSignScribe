@@ -20,14 +20,9 @@ const TechStack: React.FC = () => {
       imagePlaceholder: 'FL'
     },
     {
-      name: 'React',
+      name: 'React + Vite',
       description: 'Frontend library for interactive UI',
       imagePlaceholder: 'RE'
-    },
-    {
-      name: 'JWT',
-      description: 'Secure authentication mechanism',
-      imagePlaceholder: 'JWT'
     },
     {
       name: 'WebRTC',
@@ -47,7 +42,7 @@ const TechStack: React.FC = () => {
           </p>
         </div>
         
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-6">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-6">
           {technologies.map((tech, index) => (
             <Card key={index} className="overflow-hidden border-0 glass-card">
               <CardContent className="p-6 text-center">
