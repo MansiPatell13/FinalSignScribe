@@ -12,11 +12,11 @@ const LoginPage: React.FC = () => {
     <div className="min-h-screen flex flex-col">
       <Navbar />
       
-      <div className="flex-grow flex items-center justify-center py-12">
-        <div className="w-full max-w-md px-4">
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold heading-gradient">Welcome Back</h1>
-            <p className="text-muted-foreground mt-2">
+      <div className="flex-grow flex items-center justify-center py-16">
+        <div className="w-full max-w-md px-6">
+          <div className="text-center mb-10">
+            <h1 className="text-3xl font-bold heading-gradient mb-4">Welcome Back</h1>
+            <p className="text-muted-foreground px-4">
               Log in to continue your translation journey
             </p>
           </div>
