@@ -1,0 +1,9 @@
+fastapi
+uvicorn[standard]
+tensorflow
+mediapipe
+opencv-python-headless
+numpy
+Pillow
+python-multipart
+# Add any other specific versions if needed 
